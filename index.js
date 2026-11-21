@@ -63,6 +63,12 @@ const textBlock = (value) => [
   { type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value) },
 ];
 
+// Node 20+ 才有 AbortSignal.any；更老的运行时退化为只有本地超时。
+function withOuterSignal(local, outer) {
+  if (!outer) return local;
+  return typeof AbortSignal.any === 'function' ? AbortSignal.any([local, outer]) : local;
+}
+
 /**
  * 帧数是这个工具唯一有效的成本旋钮，而 schema 在校验之外还可能被直接调用绕过，
  * 所以这里再夹一次：小于 2 抽不出时间线，大于 20 既慢又可能超过上游 maxFrames。
@@ -77,7 +83,7 @@ function clampFrames(value) {
  * 发一个 JSON POST。**永远不抛异常**：网络错误、超时、非 JSON 响应都变成
  * { ok:false, code, message, hint }，模型看到结构化失败才能自己恢复。
  */
-async function postJson(url, body, timeoutMs) {
+async function postJson(url, body, timeoutMs, outerSignal) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -85,7 +91,7 @@ async function postJson(url, body, timeoutMs) {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
-      signal: controller.signal,
+      signal: withOuterSignal(controller.signal, outerSignal),
     });
     const text = await res.text();
     let data;
@@ -98,6 +104,10 @@ async function postJson(url, body, timeoutMs) {
     return { ok: true, status: res.status, data };
   } catch (err) {
     const aborted = err && err.name === 'AbortError';
+    // 宿主取消（用户打断 / 工具超时策略）不是服务不可达。
+    if (outerSignal && outerSignal.aborted) {
+      return { ok: false, code: 'ABORTED', message: 'the caller cancelled this tool call' };
+    }
     // Node 的 fetch 网络错误只有一句 "fetch failed"，真正的原因（ECONNREFUSED 等）在 cause 里
     const cause = err && err.cause ? err.cause.code || err.cause.message : '';
     return {
@@ -272,7 +282,11 @@ export function apply(ctx, config) {
       render: (_args, value) =>
         textBlock(value && value.ok === false ? renderFailure('watch', value) : renderWatch(value)),
     },
-    async execute(args) {
+    // 和本地 600s 分析预算保持一致；宿主提前掐断会留下没意义的半截结果。
+    timeoutMs: ANALYZE_TIMEOUT_MS,
+    // 只读：只下载/分析，不写任何插件状态。
+    isConcurrencySafe: () => true,
+    async execute(args, exec) {
       const input = args || {};
       const filePath = typeof input.filePath === 'string' ? input.filePath.trim() : '';
       const url = typeof input.url === 'string' ? input.url.trim() : '';
@@ -308,7 +322,7 @@ export function apply(ctx, config) {
       }
 
       try {
-        const res = await postJson(`${baseUrl}${route}`, body, ANALYZE_TIMEOUT_MS);
+        const res = await postJson(`${baseUrl}${route}`, body, ANALYZE_TIMEOUT_MS, exec && exec.signal);
         if (!res.ok) return res;
         if (res.data && res.data.ok === false) return upstreamFailure(res.data);
         return normalizeWatch(res.data || {}, withAudio);
