@@ -230,29 +230,24 @@ function renderWatch(value) {
 
 const WATCH_PARAMS = {
   type: 'object',
-  additionalProperties: false,
   properties: {
     filePath: {
       type: 'string',
-      description:
-        'Absolute path to a video file on the machine running the video service. Takes precedence over url. Omit when passing url.',
+      description: 'On the video-service machine; takes precedence over url.',
     },
     url: {
       type: 'string',
-      description:
-        'Public http(s) video link; the service downloads it first (needs yt-dlp). Omit when passing filePath.',
+      description: 'Public http(s) link; the service downloads it with yt-dlp.',
     },
     frames: {
       type: 'integer',
       minimum: MIN_FRAMES,
       maximum: MAX_FRAMES,
-      description:
-        `Stills sampled across the video. Default ${DEFAULT_FRAMES}, range ${MIN_FRAMES}-${MAX_FRAMES}. More frames means more detail but slower and costlier.`,
+      description: `Default ${DEFAULT_FRAMES}, range ${MIN_FRAMES}-${MAX_FRAMES}; more frames is slower and costlier.`,
     },
     withAudio: {
       type: 'boolean',
-      description:
-        'Default true. Set false to drop the audio description and skip listening — faster and cheaper.',
+      description: 'Default true; false skips listening (faster, cheaper).',
     },
   },
 };
@@ -270,7 +265,7 @@ export function apply(ctx, config) {
   register({
     name: 'watch',
     description:
-      'Look at an existing video and report what happens in it: synopsis, per-frame timeline, highlights, on-screen text, and optionally what the audio sounds like. This tool only WATCHES a video — it never generates, edits, renders, or writes one. Give filePath (on the machine running the video service) or a public http(s) url. frames sets how many stills are sampled (default 6, 2-20): more frames is more detail but slower and more expensive, and listening to the audio adds more time on top. A single call can take a minute or two and may run up to 600s.',
+      'Look at an existing video: synopsis, timeline, highlights, on-screen text, optionally the audio. Read-only — never generates or edits video. Can take up to 600s.',
     parameters: WATCH_PARAMS,
     output: {
       schema: { type: 'object' },
