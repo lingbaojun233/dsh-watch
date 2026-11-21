@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Video watch",
+    "description": "Exposes watch as a native DSH tool: look at an existing video and get a synopsis, timeline, highlights, on-screen text and the audio description. It never generates video."
+  }
+}

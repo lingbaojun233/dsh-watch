@@ -1,0 +1,17 @@
+# 依赖与产物
+node_modules/
+*.tgz
+
+# 运行时
+*.log
+.env
+.env.*
+
+# 本地测试素材（自己放的样例视频，别提交）
+test-media/
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

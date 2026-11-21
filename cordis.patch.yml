@@ -1,0 +1,7 @@
+- insert:
+    # id 用插件名、name 用包名；两边一致时最容易在 Plugin Manager 里对上号
+    - id: dsh-watch
+      name: 'dsh-watch'
+      config:
+        # config 优先于环境变量 DSH_VIDEO_URL；改这里就能把工具指向另一台 video 服务
+        baseUrl: 'http://127.0.0.1:8769'

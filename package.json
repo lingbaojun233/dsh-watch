@@ -1,0 +1,46 @@
+{
+  "name": "dsh-watch",
+  "version": "1.0.0",
+  "description": "Native DSH tool for a video service: watch an existing video and get a synopsis, timeline, highlights, on-screen text and the audio description.",
+  "type": "module",
+  "license": "MIT",
+  "author": "lingbaojun233",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lingbaojun233/dsh-watch.git"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "video",
+    "video-understanding",
+    "vision",
+    "frames",
+    "transcript"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "locale",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "homepage": "https://github.com/lingbaojun233/dsh-watch#readme",
+  "bugs": {
+    "url": "https://github.com/lingbaojun233/dsh-watch/issues"
+  }
+}
